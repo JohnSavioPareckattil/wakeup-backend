@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: wakeup-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: WAKE_TOKEN
+        sync: false        # set manually in Render dashboard
+      - key: PORT
+        value: 3000
