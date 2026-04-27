@@ -102,6 +102,22 @@ app.post('/trigger', authMiddleware, (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /register-token — dynamically add a new sender token (no Railway needed)
+// Auth: any existing valid token.  New token persists until server restart;
+// for permanence the admin should also add it to WAKE_TOKENS env var.
+app.post('/register-token', authMiddleware, (req, res) => {
+  const newToken = (req.body?.token ?? '').toString().trim();
+  if (newToken.length < 8) {
+    return res.status(400).json({ error: 'Token must be at least 8 characters.' });
+  }
+  if (VALID_TOKENS.has(newToken)) {
+    return res.json({ ok: true, message: 'Token is already registered.' });
+  }
+  VALID_TOKENS.add(newToken);
+  log('REGISTER_TOKEN', `token=${newToken.slice(0, 4)}**** by=${req.wakeToken.slice(0, 4)}****`);
+  res.json({ ok: true, message: 'Token registered until next server restart.' });
+});
+
 // POST /reset — receiver dismisses the alarm (or sender cancels)
 app.post('/reset', authMiddleware, (req, res) => {
   const by = req.body?.resetBy || 'unknown';
